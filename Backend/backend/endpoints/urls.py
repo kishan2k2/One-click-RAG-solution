@@ -5,6 +5,8 @@ urlpatterns = [
     path('register/', views.register),
     path('login/', views.login),
     path('forgotPass/', views.forgotPass),
-    path('pdfInput/', views.pdfInput),
+    path('confirm/', views.confirm),
+    path('resetPass/', views.resetPass),
+    path('pdfInput_VectorDB/', views.pdfInput_VectorDB),
     path('askLLM/<str:APIkey>', views.askLLM),
 ]
