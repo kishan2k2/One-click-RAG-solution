@@ -6,12 +6,22 @@ from django.contrib.auth import login as Login
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 import random, smtplib, os
-import PyPDF2
+from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
 from pdfminer.high_level import extract_text
 from pdfminer.pdfparser import PDFSyntaxError
 from pdfminer.pdfdocument import PDFPasswordIncorrect
-from django.core.cache import cache
-from django.views.decorators.csrf import csrf_exempt
+import langchain_text_splitters
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from typing import List, Dict, Tuple
+from dotenv import load_dotenv
+import numpy as np
+import cohere
+import PyPDF2
+import vecs
+import time
+import os
+load_dotenv()
 def home(request):
     return render(request, 'index.html')
 @require_http_methods(['POST'])
@@ -153,7 +163,44 @@ def pdfInput_VectorDB(request):
             response = {
                 'response': text
             }
-            return JsonResponse(response, status=200)
+            langchain_text_splitters = RecursiveCharacterTextSplitter(
+                chunk_size = 100,
+                chunk_overlap=20,
+                length_function=len,
+                is_separator_regex=False
+            )
+            text = langchain_text_splitters.split_text(text)
+            # response = {
+            #     'response': text
+            # }
+            # return JsonResponse(response, status=200)
+            password_supabase = os.getenv("password_supabase")
+            password_cohere = os.getenv('password_cohere')
+            co = cohere.Client(password_cohere)
+            model = 'embed-english-light-v3.0'
+            input_type = "search_query"
+            res = co.embed(
+                texts = text,
+                model = model,
+                input_type = input_type,
+                embedding_types=['float']
+            )
+            embedding = res.embeddings.float
+            records: List[Tuple[str, np.ndarray, Dict]] = []
+            for i in range(len(text)):
+                time.wait(1)
+                records.append((i, embedding[i], {"text":text[i]}))
+            DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+            vx = vecs.create_client(DB_connection)
+            collectionName = hash(request.user.username)
+            collection = vx.create_collection(name=collectionName, dimension=384)
+            collection.upsert(records)
+            collection.create_index()
+            response = {
+                'response': "Text has been vectorised and upserted",
+                'collectionName': collectionName
+            }
+            return JsonResponse(response, status=204)
         except PDFPasswordIncorrect:
             response = {
                 'response': 'PDF is password protected'
