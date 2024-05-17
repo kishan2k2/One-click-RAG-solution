@@ -17,6 +17,7 @@ from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 import numpy as np
 import cohere
+
 import PyPDF2
 import vecs
 import time
@@ -112,7 +113,7 @@ def sendEmail(email, OTP):
 @require_http_methods(['POST'])
 @csrf_exempt
 def confirm(request):
-    resposne = {}
+    response = {}
     comp = request.POST.get('OTP')
     OTP = cache.get('OTP')
     if comp == OTP:
@@ -164,8 +165,8 @@ def pdfInput_VectorDB(request):
                 'response': text
             }
             langchain_text_splitters = RecursiveCharacterTextSplitter(
-                chunk_size = 100,
-                chunk_overlap=20,
+                chunk_size = 500,
+                chunk_overlap=100,
                 length_function=len,
                 is_separator_regex=False
             )
@@ -188,11 +189,11 @@ def pdfInput_VectorDB(request):
             embedding = res.embeddings.float
             records: List[Tuple[str, np.ndarray, Dict]] = []
             for i in range(len(text)):
-                time.wait(1)
+                # time.wait(1) will see if it is necessary
                 records.append((i, embedding[i], {"text":text[i]}))
             DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
             vx = vecs.create_client(DB_connection)
-            collectionName = hash(request.user.username)
+            collectionName = str(hash(request.user.username))
             collection = vx.create_collection(name=collectionName, dimension=384)
             collection.upsert(records)
             collection.create_index()
