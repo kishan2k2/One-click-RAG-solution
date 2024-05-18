@@ -8,17 +8,14 @@ from django.contrib.auth.decorators import login_required
 import random, smtplib, os
 from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
-from pdfminer.high_level import extract_text
-from pdfminer.pdfparser import PDFSyntaxError
-from pdfminer.pdfdocument import PDFPasswordIncorrect
 import langchain_text_splitters
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 import numpy as np
 import cohere
-
 import PyPDF2
+import fitz
 import vecs
 import time
 import os
@@ -153,65 +150,62 @@ def pdfInput_VectorDB(request):
     response = {}
     if 'pdfFile' in request.FILES:
         pdfFile = request.FILES['pdfFile']
-        try:
-            pdfReader = PyPDF2.PdfReader(pdfFile)
-            numPages = len(pdfReader.pages)
-            text = ""
-            for pageNum in range(numPages):
-                page = pdfReader.pages[pageNum]
-                text += page.extract_text()
-            # Continue from here.
+        if(pdfFile.name[-3:]!='pdf'):
             response = {
-                'response': text
+                'response': 'Upload a pdf file',
             }
-            langchain_text_splitters = RecursiveCharacterTextSplitter(
-                chunk_size = 500,
-                chunk_overlap=100,
-                length_function=len,
-                is_separator_regex=False
-            )
-            text = langchain_text_splitters.split_text(text)
-            # response = {
-            #     'response': text
-            # }
-            # return JsonResponse(response, status=200)
-            password_supabase = os.getenv("password_supabase")
-            password_cohere = os.getenv('password_cohere')
-            co = cohere.Client(password_cohere)
-            model = 'embed-english-light-v3.0'
-            input_type = "search_query"
-            res = co.embed(
-                texts = text,
-                model = model,
-                input_type = input_type,
-                embedding_types=['float']
-            )
-            embedding = res.embeddings.float
-            records: List[Tuple[str, np.ndarray, Dict]] = []
-            for i in range(len(text)):
-                # time.wait(1) will see if it is necessary
-                records.append((i, embedding[i], {"text":text[i]}))
-            DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
-            vx = vecs.create_client(DB_connection)
-            collectionName = str(hash(request.user.username))
-            collection = vx.create_collection(name=collectionName, dimension=384)
-            collection.upsert(records)
-            collection.create_index()
+            return JsonResponse(response, status=200)
+        pdf = pdf = fitz.open(stream=pdfFile.read(), filetype="pdf")
+        if pdf.needs_pass:
             response = {
-                'response': "Text has been vectorised and upserted",
-                'collectionName': collectionName
+                'response': 'The PDF needs password'
             }
             return JsonResponse(response, status=204)
-        except PDFPasswordIncorrect:
+        pdfReader = PyPDF2.PdfReader(pdfFile)
+        numPages = len(pdfReader.pages)
+        text = ""
+        for pageNum in range(numPages):
+            page = pdfReader.pages[pageNum]
+            text += page.extract_text()
+        if(len(text)<1000):
             response = {
-                'response': 'PDF is password protected'
+                'response': 'The PDF is having less than 1000 characters.'
             }
             return JsonResponse(response, status=204)
-        except PDFSyntaxError:
-            response = {
-                'response': 'Invalid PDF file format'
-            }
-            return JsonResponse(response, status=204)
+        langchain_text_splitters = RecursiveCharacterTextSplitter(
+            chunk_size = 500,
+            chunk_overlap=100,
+            length_function=len,
+            is_separator_regex=False
+        )
+        text = langchain_text_splitters.split_text(text)
+        password_supabase = os.getenv("password_supabase")
+        password_cohere = os.getenv('password_cohere')
+        co = cohere.Client(password_cohere)
+        model = 'embed-english-light-v3.0'
+        input_type = "search_query"
+        res = co.embed(
+            texts = text,
+            model = model,
+            input_type = input_type,
+            embedding_types=['float']
+        )
+        embedding = res.embeddings.float
+        records: List[Tuple[str, np.ndarray, Dict]] = []
+        for i in range(len(text)):
+            # time.wait(1) # Will see if it is necessary, might be necessary when it croses the per minute limit.
+            records.append((i, embedding[i], {"text":text[i]}))
+        DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+        vx = vecs.create_client(DB_connection)
+        collectionName = str(hash(request.user.username))
+        collection = vx.create_collection(name=collectionName, dimension=384)
+        collection.upsert(records)
+        collection.create_index()
+        response = {
+            'response': "Text has been vectorised and upserted",
+            'collectionName': collectionName
+        }
+        return JsonResponse(response, status=204)
     else:
         response = {
             'response': 'No PDF uploaded'
