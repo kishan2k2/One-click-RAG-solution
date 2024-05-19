@@ -13,6 +13,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 import numpy as np
+import psycopg2
 import cohere
 import PyPDF2
 import fitz
@@ -213,6 +214,49 @@ def pdfInput_VectorDB(request):
         return JsonResponse(response, status=204)
 @csrf_exempt
 @login_required
-def askLLM():
-    # Continue from here
-    pass
+def askLLM(request, APIkey):
+    response = {}
+    password_supabase = os.getenv('password_supabase')
+    password_cohere = os.getenv('password_cohere')
+    conn = psycopg2.connect(
+        dbname = "postgres",
+        user = "postgres.gcruunzrtalzneyselps",
+        password = password_supabase,
+        host = "aws-0-ap-southeast-1.pooler.supabase.com",
+        port = "5432"
+    )
+    co = cohere.Client(password_cohere)
+    collection_name = APIkey
+    cur = conn.cursor()
+    cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (collection_name,))
+    exists = cur.fetchone()[0]
+    if not exists:
+        response = {
+            'response': "The API key is valid"
+        }
+    query = request.POST.get('query')
+    model = "embed-english-light-v3.0"
+    input_type = "search_query"
+    res = co.embed(
+        texts = [query],
+        model = model,
+        input_type=input_type,
+        embedding_types=['float']
+    )
+    query_embedding = res.embeddings.float
+    DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+    vx = vecs.create_client(DB_connection)
+    collection = vx.get_or_create_collection(name=APIkey, dimension=384)
+    context = collection.query(
+        query_embedding[0],
+        limit=5,
+        include_metadata=True,
+        include_value=True
+    )
+    answer = []
+    for result_id, result_distance, result_meta in context[:]:
+        answer.append(result_meta["text"])
+    response = {
+        'response': answer
+    }
+    return JsonResponse(response, status=200)
