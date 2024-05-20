@@ -9,8 +9,10 @@ import random, smtplib, os
 from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
 import langchain_text_splitters
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Dict, Tuple
+import google.generativeai as genai
 from dotenv import load_dotenv
 import numpy as np
 import psycopg2
@@ -218,6 +220,9 @@ def askLLM(request, APIkey):
     response = {}
     password_supabase = os.getenv('password_supabase')
     password_cohere = os.getenv('password_cohere')
+    password_gemini = os.getenv('password_gemini')
+    safety_settings = os.getenv('safety_settings')
+    instructions = os.getenv('instructions')
     conn = psycopg2.connect(
         dbname = "postgres",
         user = "postgres.gcruunzrtalzneyselps",
@@ -226,6 +231,8 @@ def askLLM(request, APIkey):
         port = "5432"
     )
     co = cohere.Client(password_cohere)
+    genai.configure(api_key=password_gemini)
+    gen_model = genai.GenerativeModel('gemini-pro')
     collection_name = APIkey
     cur = conn.cursor()
     cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (collection_name,))
@@ -247,16 +254,22 @@ def askLLM(request, APIkey):
     DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
     vx = vecs.create_client(DB_connection)
     collection = vx.get_or_create_collection(name=APIkey, dimension=384)
-    context = collection.query(
+    rag = collection.query(
         query_embedding[0],
         limit=5,
         include_metadata=True,
         include_value=True
     )
-    answer = []
-    for result_id, result_distance, result_meta in context[:]:
-        answer.append(result_meta["text"])
+    context = ''
+    for result_id, result_distance, result_meta in rag[:]:
+        context += result_meta["text"] + '\n\n'
+    query = f'''
+        Instructions : {instructions} \n\n
+        Context : {context} \n\n
+        Query : {query}
+    '''
+    res = gen_model.generate_content(query, safety_settings=safety_settings)
     response = {
-        'response': answer
+        'response': res.text
     }
     return JsonResponse(response, status=200)
