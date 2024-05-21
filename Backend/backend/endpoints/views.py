@@ -183,25 +183,33 @@ def pdfInput_VectorDB(request):
         )
         text = langchain_text_splitters.split_text(text)
         password_supabase = os.getenv("password_supabase")
-        password_cohere = os.getenv('password_cohere')
-        co = cohere.Client(password_cohere)
-        model = 'embed-english-light-v3.0'
-        input_type = "search_query"
-        res = co.embed(
-            texts = text,
-            model = model,
-            input_type = input_type,
-            embedding_types=['float']
+        # password_cohere = os.getenv('password_cohere')
+        password_gemini = os.getenv('password_gemini')
+        genai.configure(api_key=password_gemini)
+        # co = cohere.Client(password_cohere)
+        # model = 'embed-english-light-v3.0'
+        # input_type = "search_query"
+        # res = co.embed(
+        #     texts = text,
+        #     model = model,
+        #     input_type = input_type,
+        #     embedding_types=['float']
+        # )
+        # embedding = res.embeddings.float
+        embedding = genai.embed_content(
+            model="models/embedding-001",
+            content=text,
+            task_type="retrieval_document",
+            title="Embedding of single string"
         )
-        embedding = res.embeddings.float
         records: List[Tuple[str, np.ndarray, Dict]] = []
         for i in range(len(text)):
             # time.wait(1) # Will see if it is necessary, might be necessary when it croses the per minute limit.
-            records.append((i, embedding[i], {"text":text[i]}))
+            records.append((i, embedding['embedding'][i], {"text":text[i]}))
         DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
         vx = vecs.create_client(DB_connection)
         collectionName = str(hash(request.user.username))
-        collection = vx.create_collection(name=collectionName, dimension=384)
+        collection = vx.create_collection(name=collectionName, dimension=768)
         collection.upsert(records)
         collection.create_index()
         response = {
@@ -219,7 +227,7 @@ def pdfInput_VectorDB(request):
 def askLLM(request, APIkey):
     response = {}
     password_supabase = os.getenv('password_supabase')
-    password_cohere = os.getenv('password_cohere')
+    # password_cohere = os.getenv('password_cohere')
     password_gemini = os.getenv('password_gemini')
     safety_settings = os.getenv('safety_settings')
     instructions = os.getenv('instructions')
@@ -230,7 +238,7 @@ def askLLM(request, APIkey):
         host = "aws-0-ap-southeast-1.pooler.supabase.com",
         port = "5432"
     )
-    co = cohere.Client(password_cohere)
+    # co = cohere.Client(password_cohere)
     genai.configure(api_key=password_gemini)
     gen_model = genai.GenerativeModel('gemini-pro')
     collection_name = APIkey
@@ -244,18 +252,18 @@ def askLLM(request, APIkey):
     query = request.POST.get('query')
     model = "embed-english-light-v3.0"
     input_type = "search_query"
-    res = co.embed(
-        texts = [query],
-        model = model,
-        input_type=input_type,
-        embedding_types=['float']
+    res = genai.embed_content(
+        model="models/embedding-001",
+        content=query,
+        task_type="retrieval_document",
+        title="Embedding of single string"
     )
-    query_embedding = res.embeddings.float
+    query_embedding = res['embedding']
     DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
     vx = vecs.create_client(DB_connection)
-    collection = vx.get_or_create_collection(name=APIkey, dimension=384)
+    collection = vx.get_or_create_collection(name=APIkey, dimension=768)
     rag = collection.query(
-        query_embedding[0],
+        query_embedding,
         limit=5,
         include_metadata=True,
         include_value=True
@@ -269,6 +277,7 @@ def askLLM(request, APIkey):
         Query : {query}
     '''
     res = gen_model.generate_content(query, safety_settings=safety_settings)
+    print(res.text)
     response = {
         'response': res.text
     }
