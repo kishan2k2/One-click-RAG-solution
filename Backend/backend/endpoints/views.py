@@ -16,7 +16,6 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import numpy as np
 import psycopg2
-import cohere
 import PyPDF2
 import fitz
 import vecs
