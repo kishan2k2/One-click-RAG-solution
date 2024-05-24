@@ -7,7 +7,8 @@ const Login = ({setLogin}) => {
   const[forgotPass,setForgotPass]=useState(false);
 
   function handleClick()
-  {
+  { 
+    console.log("testing the frontend");
     console.log("before setlogin");
     // setLogin(false);
     console.log("after setlogin"); 
