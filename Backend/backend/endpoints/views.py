@@ -30,6 +30,7 @@ def home(request):
 @require_http_methods(['POST'])
 @csrf_exempt
 def register(request):
+    print("this is register")
     response = {}
     userName = request.POST.get('userName')
     email = request.POST.get('email')
