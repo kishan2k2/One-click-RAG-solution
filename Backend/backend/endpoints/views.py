@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as Login
@@ -224,7 +224,6 @@ def pdfInput_VectorDB(request):
 @csrf_exempt
 @login_required
 def askLLM(request, APIkey):
-    response = {}
     password_supabase = os.getenv('password_supabase')
     # password_cohere = os.getenv('password_cohere')
     password_gemini = os.getenv('password_gemini')
@@ -245,9 +244,9 @@ def askLLM(request, APIkey):
     cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (collection_name,))
     exists = cur.fetchone()[0]
     if not exists:
-        response = {
-            'response': "The API key is valid"
-        }
+        def generate_error():
+            yield f"event: error\ndata: The API key is invalid\n\n"
+        return StreamingHttpResponse(generate_error(), content_type='text/event-stream')
     query = request.POST.get('query')
     model = "embed-english-light-v3.0"
     input_type = "search_query"
@@ -270,14 +269,37 @@ def askLLM(request, APIkey):
     context = ''
     for result_id, result_distance, result_meta in rag[:]:
         context += result_meta["text"] + '\n\n'
-    query = f'''
+    detailed_query = f'''
         Instructions : {instructions} \n\n
         Context : {context} \n\n
         Query : {query}
     '''
-    res = gen_model.generate_content(query, safety_settings=safety_settings)
-    print(res.text)
-    response = {
-        'response': res.text
-    }
-    return JsonResponse(response, status=200)
+    def generate_response():
+        # Ensure the generate_content method is set to stream mode
+        res = gen_model.generate_content(detailed_query, safety_settings=safety_settings, stream=True)
+        # for chunks in res:
+        #     print(chunks.text)
+        for tokens in res:
+            chunk = tokens.text
+            # Tokenize by words and preserve newlines
+            words_and_newlines = []
+            start = 0
+            for i, char in enumerate(chunk):
+                if char == '\n':
+                    if start < i:
+                        words_and_newlines.append(chunk[start:i])
+                    words_and_newlines.append(char)
+                    start = i + 1
+            if start < len(chunk):
+                words_and_newlines.append(chunk[start:])
+            
+            for token in words_and_newlines:
+                if token == '\n':
+                    yield "event: data\ndata: \n\n"
+                else:
+                    yield f"event: data\ndata: {token}\n\n"
+        yield "event: done\ndata: [DONE]\n\n"
+    response = StreamingHttpResponse(generate_response(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
