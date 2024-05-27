@@ -228,6 +228,7 @@ def pdfInput_VectorDB(request):
 @csrf_exempt
 @login_required
 def askLLM(request, APIkey):
+<<<<<<< HEAD
     try:
         response = {}
         password_supabase = os.getenv('password_supabase')
@@ -305,3 +306,84 @@ def askLLM(request, APIkey):
         'response': res.text
     }
     return JsonResponse(response, status=200)
+=======
+    password_supabase = os.getenv('password_supabase')
+    # password_cohere = os.getenv('password_cohere')
+    password_gemini = os.getenv('password_gemini')
+    safety_settings = os.getenv('safety_settings')
+    instructions = os.getenv('instructions')
+    conn = psycopg2.connect(
+        dbname = "postgres",
+        user = "postgres.gcruunzrtalzneyselps",
+        password = password_supabase,
+        host = "aws-0-ap-southeast-1.pooler.supabase.com",
+        port = "5432"
+    )
+    # co = cohere.Client(password_cohere)
+    genai.configure(api_key=password_gemini)
+    gen_model = genai.GenerativeModel('gemini-pro')
+    collection_name = APIkey
+    cur = conn.cursor()
+    cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (collection_name,))
+    exists = cur.fetchone()[0]
+    if not exists:
+        def generate_error():
+            yield f"event: error\ndata: The API key is invalid\n\n"
+        return StreamingHttpResponse(generate_error(), content_type='text/event-stream')
+    query = request.POST.get('query')
+    model = "embed-english-light-v3.0"
+    input_type = "search_query"
+    res = genai.embed_content(
+        model="models/embedding-001",
+        content=query,
+        task_type="retrieval_document",
+        title="Embedding of single string"
+    )
+    query_embedding = res['embedding']
+    DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+    vx = vecs.create_client(DB_connection)
+    collection = vx.get_or_create_collection(name=APIkey, dimension=768)
+    rag = collection.query(
+        query_embedding,
+        limit=5,
+        include_metadata=True,
+        include_value=True
+    )
+    context = ''
+    for result_id, result_distance, result_meta in rag[:]:
+        context += result_meta["text"] + '\n\n'
+    detailed_query = f'''
+        Instructions : {instructions} \n\n
+        Context : {context} \n\n
+        Query : {query}
+    '''
+    def generate_response():
+        # Ensure the generate_content method is set to stream mode
+        res = gen_model.generate_content(detailed_query, safety_settings=safety_settings, stream=True)
+        # for chunks in res:
+        #     print(chunks.text)
+        for tokens in res:
+            chunk = tokens.text
+            # Tokenize by words and preserve newlines
+            words_and_newlines = []
+            start = 0
+            for i, char in enumerate(chunk):
+                if char == '\n':
+                    if start < i:
+                        words_and_newlines.append(chunk[start:i])
+                    words_and_newlines.append(char)
+                    start = i + 1
+            if start < len(chunk):
+                words_and_newlines.append(chunk[start:])
+            
+            for token in words_and_newlines:
+                if token == '\n':
+                    yield "event: data\ndata: \n\n"
+                else:
+                    yield f"event: data\ndata: {token}\n\n"
+        yield "event: done\ndata: [DONE]\n\n"
+    response = StreamingHttpResponse(generate_response(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+>>>>>>> stream
