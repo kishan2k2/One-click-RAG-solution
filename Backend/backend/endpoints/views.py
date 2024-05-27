@@ -228,85 +228,6 @@ def pdfInput_VectorDB(request):
 @csrf_exempt
 @login_required
 def askLLM(request, APIkey):
-<<<<<<< HEAD
-    try:
-        response = {}
-        password_supabase = os.getenv('password_supabase')
-        # password_cohere = os.getenv('password_cohere')
-        password_gemini = os.getenv('password_gemini')
-        safety_settings = os.getenv('safety_settings')
-        instructions = os.getenv('instructions')
-        conn = psycopg2.connect(
-            dbname = "postgres",
-            user = "postgres.gcruunzrtalzneyselps",
-            password = password_supabase,
-            host = "aws-0-ap-southeast-1.pooler.supabase.com",
-            port = "5432"
-        )
-        # co = cohere.Client(password_cohere)
-        genai.configure(api_key=password_gemini)
-        gen_model = genai.GenerativeModel('gemini-pro')
-        collection_name = APIkey
-        cur = conn.cursor()
-        cur.execute("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)", (collection_name,))
-        exists = cur.fetchone()[0]
-        if not exists:
-            response = {
-                'response': "The API key is valid"
-            }
-            return JsonResponse(response, status = 200)
-        query = request.POST.get('query')
-        model = "embed-english-light-v3.0"
-        input_type = "search_query"
-        res = genai.embed_content(
-            model="models/embedding-001",
-            content=query,
-            task_type="retrieval_document",
-            title="Embedding of single string"
-        )
-        query_embedding = res['embedding']
-        DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
-        vx = vecs.create_client(DB_connection)
-        collection = vx.get_or_create_collection(name=APIkey, dimension=768)
-        rag = collection.query(
-            query_embedding,
-            limit=5,
-            include_metadata=True,
-            include_value=True
-        )
-        context = ''
-        for result_id, result_distance, result_meta in rag[:]:
-            context += result_meta["text"] + '\n\n'
-        query = f'''
-            Instructions : {instructions} \n\n
-            Context : {context} \n\n
-            Query : {query}
-        '''
-        global start
-        start = time.time()
-        logger.debug(f"Elapsed Time is {time.time() - start}")
-        # response = {'response':res.text}
-        # return JsonResponse(response, status = 200)
-        # print(stream(res))
-        # logger.debug("Starting streaming response...")
-        async def stream(query):
-            response = gen_model.generate_content(query, safety_settings=safety_settings, stream=True)
-            for chunk in response:
-                if hasattr(chunk, 'text'):
-                    yield chunk.text
-                    print(chunk.text)
-                    print(80*"_")
-        return StreamingHttpResponse(stream(query), content_type='text/text-stream')
-    except Exception as e:
-        logger.error(f"Error in askLLM: {str(e)}")
-        response = {'error': str(e)}
-        return JsonResponse(response, status=500)
-    print(res.text)
-    response = {
-        'response': res.text
-    }
-    return JsonResponse(response, status=200)
-=======
     password_supabase = os.getenv('password_supabase')
     # password_cohere = os.getenv('password_cohere')
     password_gemini = os.getenv('password_gemini')
@@ -386,4 +307,3 @@ def askLLM(request, APIkey):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
->>>>>>> stream
