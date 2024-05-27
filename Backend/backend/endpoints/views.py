@@ -90,6 +90,7 @@ def forgotPass(request):
         return JsonResponse(response, status=204)
     user = User.objects.get(username = userName)
     email = user.email
+  
     OTP = random.randint(1000, 99999)
     cache_key = 'OTP'
     cache.set(cache_key, str(OTP), timeout=3000)
@@ -106,9 +107,10 @@ def sendEmail(email, OTP):
     text = OTP
     message = 'Subject: {}\n\n{}'.format(subject, text)
     server = smtplib.SMTP('smtp.gmail.com', 587)
+    print(password)
     server.starttls()
-    server.login('payadikishan@gmail.com', password)
-    server.sendmail('payadikishan@gmail.com', email, message)
+    server.login('commonmailkishanandamar@gmail.com', password)
+    server.sendmail('commonmailkishanandamar@gmail.com', email, message)
 @require_http_methods(['POST'])
 @csrf_exempt
 def confirm(request):

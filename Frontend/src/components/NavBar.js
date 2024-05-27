@@ -9,6 +9,7 @@ const Navbar = () => {
    
     const [login,setLogin]=useState(false);
     const [signUp,setSignUp]=useState(false);
+   
     return (  
        
         <nav>
