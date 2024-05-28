@@ -14,6 +14,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Dict, Tuple
 import google.generativeai as genai
 from dotenv import load_dotenv
+from .models import userModel
 import numpy as np
 import psycopg2
 import PyPDF2
@@ -55,6 +56,8 @@ def register(request):
     )
     user.set_password(password)
     user.save()
+    instance = userModel(userName = userName, APIkey = str(hash(userName)))
+    instance.save()
     response = {
         'response':'User created'
     }
@@ -211,7 +214,8 @@ def pdfInput_VectorDB(request):
             records.append((i, embedding['embedding'][i], {"text":text[i]}))
         DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
         vx = vecs.create_client(DB_connection)
-        collectionName = str(hash(request.user.username))
+        instance = userModel.objects.get(userName=request.user.username)
+        collectionName =  instance.APIkey
         collection = vx.create_collection(name=collectionName, dimension=768)
         collection.upsert(records)
         collection.create_index()
@@ -232,7 +236,20 @@ def askLLM(request, APIkey):
     # password_cohere = os.getenv('password_cohere')
     password_gemini = os.getenv('password_gemini')
     safety_settings = os.getenv('safety_settings')
-    instructions = os.getenv('instructions')
+    instructions1 = os.getenv('instructions')
+    instructions2  = ""
+    if(userModel.objects.filter(APIkey=APIkey).exists()):
+        instance = userModel.objects.get(APIkey=APIkey)
+        if hasattr(instance, 'instructions'):
+            instructions2 = instance.instructions
+            # response = {
+            #     'customInstructions':instructions
+            # }
+            # return JsonResponse(response)
+        # response = {
+        #     'response': "No instructions for this user"
+        # }
+        # return JsonResponse(response, status=200)
     conn = psycopg2.connect(
         dbname = "postgres",
         user = "postgres.gcruunzrtalzneyselps",
@@ -252,8 +269,8 @@ def askLLM(request, APIkey):
             yield f"event: error\ndata: The API key is invalid\n\n"
         return StreamingHttpResponse(generate_error(), content_type='text/event-stream')
     query = request.POST.get('query')
-    model = "embed-english-light-v3.0"
-    input_type = "search_query"
+    # model = "embed-english-light-v3.0"
+    # input_type = "search_query"
     res = genai.embed_content(
         model="models/embedding-001",
         content=query,
@@ -274,7 +291,8 @@ def askLLM(request, APIkey):
     for result_id, result_distance, result_meta in rag[:]:
         context += result_meta["text"] + '\n\n'
     detailed_query = f'''
-        Instructions : {instructions} \n\n
+        Instructions : {instructions1} \n\n
+        CustomInstructions: {instructions2}\n\n
         Context : {context} \n\n
         Query : {query}
     '''
@@ -307,3 +325,21 @@ def askLLM(request, APIkey):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
+@csrf_exempt
+@login_required
+@require_http_methods(['POST'])
+def customInstructions(request):
+    response = {}
+    Instructions = request.POST.get('instructions')
+    if not userModel.objects.filter(userName = request.user.username).exists():
+        response = {
+            'response': "Model doesn't exist"
+        }
+        return JsonResponse(response)
+    instance = userModel.objects.get(userName = request.user.username)
+    instance.instructions = Instructions
+    instance.save()
+    response = {
+        'response': 'Instructions recorded'
+    }
+    return JsonResponse(response, status = 200)
