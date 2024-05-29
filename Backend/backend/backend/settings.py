@@ -83,13 +83,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'oneclickrag',
         'USER' : 'kishan',
-        'PASSWORD' : 'password',
-        'HOST' : 'localhost',
+        'PASSWORD' : 'E9NeotK3uTEXPA8BEPGQnthoEcEIvyca',
+        'HOST' : 'dpg-cpbfot6n7f5s73fb37bg-a.oregon-postgres.render.com',
         'PORT' : '5432',
     }
 }
 
-
+# postgres://kishan:E9NeotK3uTEXPA8BEPGQnthoEcEIvyca@
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
