@@ -349,6 +349,10 @@ def customInstructions(request):
 def Logout(request):
     response = {}
     logout(request)
+    response = {
+        'response': 'User is logged out'
+    }
+    return JsonResponse(response, status=200)
 @csrf_exempt
 def loggedin(request):
     response = {}
