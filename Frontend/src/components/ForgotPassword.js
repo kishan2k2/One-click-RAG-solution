@@ -2,9 +2,11 @@ import { useState } from "react";
 import logo from "../assests/images/rocket-solid-dark.svg";
 import Otp from "./Otp";
 import usePost from './usePost';
+import InfoCard from "./InfoCard";
 
 const ForgotPassword = ({ setForgetPass}) => {
   const [OTP, setOTP] = useState(false);
+  const [info,setInfo]=useState(false);
   const [forgetData, setForgetData] = useState({
     userName: '',
     email: ''
@@ -14,15 +16,19 @@ const ForgotPassword = ({ setForgetPass}) => {
     setForgetData({ ...forgetData, [e.target.name]: e.target.value });
   };
 
-  const {message,handleSubmit}=usePost('http://127.0.0.1:8000/forgotPass/','Forgot Password');
+  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/forgotPass/','Forgot Password');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
-    handleSubmit(e, forgetData,setForgetPass,setOTP);
+    handleSubmit(e, forgetData,setOTP,setInfo);
     
   }
 
-  return OTP ? (
+  return info?(
+    <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
+      <InfoCard setInfo={setInfo} message={message} response={response}/>
+    </div>
+  ):OTP ? (
     <div className="w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm">
       <Otp setOTP={setOTP} />
     </div>

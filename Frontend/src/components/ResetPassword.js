@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import logo from '../assests/images/rocket-solid-dark.svg';
 import usePost from './usePost';
+import InfoCard from "./InfoCard";
 const ResetPassword = ({setResetPass}) => {
 
   const [password,setPassword]=useState(
@@ -9,15 +10,18 @@ const ResetPassword = ({setResetPass}) => {
       password2: ''
     }
   );
+  const [info,setInfo]=useState(false);
   const handleChange = (e) => {
     setPassword({ ...password, [e.target.name]: e.target.value });
+    
   };
 
-  const {message,handleSubmit}=usePost('http://127.0.0.1:8000/resetPass/','Reset Password');
+  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/resetPass/','Reset Password');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
-    handleSubmit(e, password,setResetPass,null);
+    setInfo(true);
+    handleSubmit(e, password,setResetPass,setInfo);
     
   }
 
@@ -25,6 +29,12 @@ const ResetPassword = ({setResetPass}) => {
 
 
     return ( 
+      info?(
+        <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
+          <InfoCard setInfo={setInfo} message={message} response={response}/>
+        </div>
+      ):
+      (
         <div className="h-[250px] w-[300px] flex flex-col gap-4 bg-white border-solid border-1 border-black p-4 rounded-md">
         <div className=" flex justify-between">
            <div className="flex justify-start gap-2 items-center">
@@ -46,6 +56,7 @@ const ResetPassword = ({setResetPass}) => {
         </form>
 
    </div>
+      )
      );
 }
  

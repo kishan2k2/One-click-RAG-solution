@@ -2,23 +2,28 @@ import { useState } from "react";
 import logo from "../assests/images/rocket-solid-dark.svg";
 import ResetPassword from "./ResetPassword";
 import usePost from './usePost';
+import InfoCard from "./InfoCard";
 const Otp = ({ setOTP }) => {
   const [resetPass, setResetPass] = useState(false);
   const [otpValue, setOtpValue] = useState("");
-
+  const [info,setInfo]=useState(false);
   const handleChange = (e) => {
     setOtpValue(e.target.value);
   };
 
-  const {message,handleSubmit}=usePost('http://127.0.0.1:8000/confirm/','Otp send');
+  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/confirm/','Otp send');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
-    handleSubmit(e,otpValue,setOTP,setResetPass);
+    handleSubmit(e,otpValue,setResetPass,setInfo);
     
   }
 
-  return resetPass ? (
+  return info?(
+    <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
+      <InfoCard setInfo={setInfo} message={message} response={response}/>
+    </div>
+  ):resetPass ? (
     <div className=" w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm">
       <ResetPassword setResetPass={setResetPass} />
     </div>

@@ -9,15 +9,17 @@ const SignUp = ({ setSignUp}) => {
     email: '',
     password: ''
   });
+  const [info,setInfo]=useState(false);
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const {message,handleSubmit}=usePost('http://127.0.0.1:8000/register/','Sign up');
+  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/register/','Sign up');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
-    handleSubmit(e, formData,setSignUp,null);
+    setInfo(true);
+    handleSubmit(e, formData,null,setInfo);
     
   }
 
@@ -27,7 +29,13 @@ const SignUp = ({ setSignUp}) => {
 
 
   return (
-  
+    
+    info?(
+      <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
+        <InfoCard setInfo={setInfo} message={message} response={response}/>
+      </div>
+    ):
+  (
     <div className="flex justify-center">
     <div className="bg-[#030712] h-[480px] w-[400px] text-white p-8 rounded-md">
       <div className="flex flex-col gap-4 ">
@@ -62,6 +70,7 @@ const SignUp = ({ setSignUp}) => {
       </div>
     </div>
   </div>
+  )
     
   );
 };

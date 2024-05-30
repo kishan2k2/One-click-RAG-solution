@@ -4,8 +4,10 @@ import SignUp from './SignUp';
 import ForgotPassword from './ForgotPassword'
 import axios from 'axios';
 import usePost from './usePost';
+import InfoCard from './InfoCard';
 const Login = ({setLogin}) => {
   const[signUp,setSignUp]=useState(false);
+  const [info,setInfo]=useState(false);
   const[forgotPass,setForgotPass]=useState(false);
   const [loginData,setLoginData]=useState({
     userName: '',
@@ -20,15 +22,17 @@ const Login = ({setLogin}) => {
   {
    
     setSignUp(true);
+    // setLogin(false);
    
    
   }
 
-  const {message,handleSubmit}=usePost('http://127.0.0.1:8000/login/','Login');
+  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/login/','Login');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
-    handleSubmit(e, loginData,setLogin,null);
+    setInfo(true);
+    handleSubmit(e, loginData,null,setInfo);
     
   }
 
@@ -37,6 +41,11 @@ const Login = ({setLogin}) => {
  
   return (
 
+    info?(
+      <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
+        <InfoCard setInfo={setInfo} message={message} response={response}/>
+      </div>
+    ):
     signUp?(
       <div className=' w-screen h-screen flex justify-center items-center fixed bg-white/20 backdrop-blur-sm'>
         <SignUp setSignUp={setSignUp} setLogin={setLogin} />

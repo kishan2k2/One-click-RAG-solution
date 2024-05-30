@@ -2,8 +2,10 @@ import { useState } from "react";
 import axios from "axios";
 
 const usePost = (url,type) => {
+    const res=['User created','Login sucessfull','Email sent','OTP confirmed','The password has been updated']
     const [message,setMessage]=useState('');
-    const handleSubmit = async (e,formData,state1,state2) => {
+    const [response,setresponse]=useState(false);
+    const handleSubmit = async (e,formData,state,setInfo) => {
         e.preventDefault();
     
         try {
@@ -17,16 +19,27 @@ const usePost = (url,type) => {
           );
           
           setMessage(response.data.response)
-          if(state2!=null)
+          if(state!=null)
             {
-                state2(true);
+                state(true);
                 console.log("state2 working")
             }
-            else{
-              state1(false);
-            }
+            
+            res.forEach((item) => {
+              if (item === response.data.response) {
+                setresponse(true);
+                
+              }
+            });
+            
+            if(response==false)
+              {
+                setInfo(true);
+              }
+
+
          
-          console.log(state2);
+          console.log(state);
           
           console.log( `${type} successful `, response.data);
           // Handle success: redirect, show success message, etc.
@@ -40,7 +53,9 @@ const usePost = (url,type) => {
         
         {
             message,
-            handleSubmit
+            handleSubmit,
+            response
+
 
         }
      );
