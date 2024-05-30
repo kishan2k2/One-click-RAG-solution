@@ -115,8 +115,8 @@ def sendEmail(email, OTP):
     message = 'Subject: {}\n\n{}'.format(subject, text)
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login('payadikishan@gmail.com', password)
-    server.sendmail('payadikishan@gmail.com', email, message)
+    server.login('commonmailkishanandamar@gmail.com', password)
+    server.sendmail('commonmailkishanandamar@gmail.com', email, message)
 @require_http_methods(['POST'])
 @csrf_exempt
 def confirm(request):
