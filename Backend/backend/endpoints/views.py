@@ -18,6 +18,7 @@ from .models import userModel
 import numpy as np
 import psycopg2
 import PyPDF2
+import pymupdf
 import fitz
 import vecs
 import time
