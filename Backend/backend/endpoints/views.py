@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse, StreamingHttpResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login as Login
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
@@ -343,4 +343,21 @@ def customInstructions(request):
     response = {
         'response': 'Instructions recorded'
     }
+    return JsonResponse(response, status = 200)
+@csrf_exempt
+@login_required
+def Logout(request):
+    response = {}
+    logout(request)
+@csrf_exempt
+def loggedin(request):
+    response = {}
+    if request.user.is_authenticated:
+        response = {
+            'response': request.user.username
+        }
+    else:
+        response = {
+            'response': 'Not logged in'
+        }
     return JsonResponse(response, status = 200)

@@ -11,4 +11,6 @@ urlpatterns = [
     path('askLLM/<str:APIkey>', views.askLLM),
     path('customInstructions/', views.customInstructions),
     path('accounts/login/', views.login),
+    path('loggedin/', views.loggedin),
+    path('logout/', views.Logout)
 ]
