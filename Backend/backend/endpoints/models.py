@@ -6,3 +6,4 @@ class userModel(models.Model):
     userName = models.CharField(max_length = 50)
     APIkey = models.CharField(max_length=50)
     instructions = models.CharField(max_length=255)
+
