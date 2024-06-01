@@ -2,7 +2,7 @@
 {
 
     width: 270px;
-    height: 250px;
+    height: 280px;
     background: #1f2937;
     border-radius: 6px;
     display:flex;
@@ -14,6 +14,20 @@
     padding-left: 20px;
 }
 
+@media(max-width:800px)
+{
+    .card
+    {
+        width: 80%;
+        height: 250px;
+    }
+}
+@media(max-width:400px)
+{
+    .card{
+        width: 90%;
+    }
+}
 .card_img_div
 {
 

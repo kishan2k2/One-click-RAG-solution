@@ -14,9 +14,9 @@ const FileUpload = () => {
       <input {...getInputProps()} />
       <div className='flex flex-col justify-center items-center gap-4'>
         <img src={fileIcon} alt="file icon" className='h-[30px] w-[30px]'/>
-      <p className='text-xl text-white font-semibold'>Drag and drop your PDF files here</p>
-      <p className='text-base text-[#9ca3af] '>or browse your files</p>
-      <ul className='font-semibold'>
+      <p className='text-xl text-center text-white font-semibold max-[400px]:text-sm max-[600px]:text-base max-[1000px]:text-lg min-[1600px]:text-2xl'>Drag and drop your PDF files here</p>
+      <p className='text-base text-center text-[#9ca3af]  max-[400px]:text-xs max-[600px]:text-sm max-[1000px]:text-base min-[1600px]:text-xl'>or browse your files</p>
+      <ul className='font-semibold text-base max-[400px]:text-xs max-[600px]:text-sm max-[1000px]:text-base min-[1600px]:text-xl'>
         {uploadedFiles.map((file) => (
           <li key={file.name}>{file.name}</li>
         ))}
