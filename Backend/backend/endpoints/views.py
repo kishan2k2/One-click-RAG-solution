@@ -217,7 +217,7 @@ def pdfInput_VectorDB(request):
         vx = vecs.create_client(DB_connection)
         instance = userModel.objects.get(userName=request.user.username)
         collectionName =  instance.APIkey
-        collection = vx.create_collection(name=collectionName, dimension=768)
+        collection = vx.get_or_create_collection(name=collectionName, dimension=768)
         collection.upsert(records)
         collection.create_index()
         response = {
