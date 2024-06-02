@@ -355,6 +355,8 @@ def Logout(request):
 @csrf_exempt
 def loggedin(request):
     response = {}
+    print(request)
+    print(request.user)
     if request.user.is_authenticated:
         response = {
             'response': request.user.username
