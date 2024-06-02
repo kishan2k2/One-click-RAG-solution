@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'endpoints',
     'corsheaders',
 ]
-
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_SECURE = False
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
