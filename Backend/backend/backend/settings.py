@@ -59,8 +59,8 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "user_session"
 SESSION_SAVE_EVERY_REQUEST = True
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
