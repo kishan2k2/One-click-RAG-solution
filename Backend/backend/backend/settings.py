@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 CORS_ORIGIN_ALLOW_ALL = True
-
+SESSION_COOKIE_AGE = 1209600
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
