@@ -56,8 +56,8 @@ INSTALLED_APPS = [
 ]
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_NAME = "user_session"
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = False
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
