@@ -230,12 +230,12 @@ def pdfInput_VectorDB(request):
             'collectionName': collectionName
         }
         print(response)
-        return JsonResponse(response, status=204)
+        return JsonResponse(response, status=200)
     else:
         response = {
             'response': 'No PDF uploaded'
         }
-        return JsonResponse(response, status=204)
+        return JsonResponse(response, status=200)
 @csrf_exempt
 @login_required
 def askLLM(request, APIkey):
