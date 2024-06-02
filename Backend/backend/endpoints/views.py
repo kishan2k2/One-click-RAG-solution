@@ -94,7 +94,7 @@ def forgotPass(request):
         response = {
             'response': "UserName doesn't exist"
         }
-        return JsonResponse(response, status=204)
+        return JsonResponse(response, status=200)
     user = User.objects.get(username = userName)
     email = user.email
     OTP = random.randint(1000, 99999)
@@ -132,7 +132,7 @@ def confirm(request):
             'response': "OTP didn't match",
             'OTP': OTP
         }
-        return JsonResponse(response, status=204)
+        return JsonResponse(response, status=200)
 @require_http_methods(['POST'])
 @csrf_exempt
 def resetPass(request):
@@ -143,7 +143,7 @@ def resetPass(request):
         response = {
             'response': "Password doesn't match try again"
         }
-        return JsonResponse(response, status=204)
+        return JsonResponse(response, status=200)
     userName = cache.get('userName')
     user = User.objects.filter(username=userName).first()
     user.set_password(password1)
@@ -169,7 +169,7 @@ def pdfInput_VectorDB(request):
             response = {
                 'response': 'The PDF needs password'
             }
-            return JsonResponse(response, status=204)
+            return JsonResponse(response, status=200)
         pdfReader = PyPDF2.PdfReader(pdfFile)
         numPages = len(pdfReader.pages)
         text = ""
@@ -180,7 +180,7 @@ def pdfInput_VectorDB(request):
             response = {
                 'response': 'The PDF is having less than 1000 characters.'
             }
-            return JsonResponse(response, status=204)
+            return JsonResponse(response, status=20)
         langchain_text_splitters = RecursiveCharacterTextSplitter(
             chunk_size = 500,
             chunk_overlap=100,
