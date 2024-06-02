@@ -32,7 +32,6 @@ def home(request):
 @require_http_methods(['POST'])
 @csrf_exempt
 def register(request):
-    print("this is register")
     response = {}
     userName = request.POST.get('userName')
     email = request.POST.get('email')
@@ -159,9 +158,7 @@ def resetPass(request):
 def pdfInput_VectorDB(request):
     response = {}
     if 'pdfFile' in request.FILES:
-        print('inside if')
         pdfFile = request.FILES['pdfFile']
-        print('file name ', f'{pdfFile}')
         if(pdfFile.name[-3:]!='pdf'):
             response = {
                 'response': 'Upload a pdf file',
@@ -179,7 +176,6 @@ def pdfInput_VectorDB(request):
         for pageNum in range(numPages):
             page = pdfReader.pages[pageNum]
             text += page.extract_text()
-        print('text extracted', text)
         if(len(text)<1000):
             response = {
                 'response': 'The PDF is having less than 1000 characters.'
@@ -218,18 +214,15 @@ def pdfInput_VectorDB(request):
             records.append((i, embedding['embedding'][i], {"text":text[i]}))
         DB_connection = f"postgresql://postgres.gcruunzrtalzneyselps:{password_supabase}@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
         vx = vecs.create_client(DB_connection)
-        print('created client')
         instance = userModel.objects.get(userName=request.user.username)
         collectionName =  instance.APIkey
         collection = vx.get_or_create_collection(name=collectionName, dimension=768)
-        print('created collection')
         collection.upsert(records)
         collection.create_index()
         response = {
             'response': "Text has been vectorised and upserted",
             'collectionName': collectionName
         }
-        print(response)
         return JsonResponse(response, status=200)
     else:
         response = {
