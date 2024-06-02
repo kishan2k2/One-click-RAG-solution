@@ -14,7 +14,7 @@ const SignUp = ({ setSignUp}) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/register/','Sign up');
+  const {message,handleSubmit,response}=usePost('https://one-click-rag-solution.onrender.com/register/','Sign up');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();

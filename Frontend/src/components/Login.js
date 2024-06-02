@@ -27,7 +27,7 @@ const Login = ({setLogin}) => {
    
   }
 
-  const {message,handleSubmit,response}=usePost('http://127.0.0.1:8000/login/','Login');
+  const {message,handleSubmit,response}=usePost('https://one-click-rag-solution.onrender.com/login/','Login');
   function onSubmitFunc(e)
   { 
     // e.preventDefault();
@@ -79,13 +79,13 @@ const Login = ({setLogin}) => {
               </div>
               <form  onSubmit={onSubmitFunc}>
                 <div className="flex flex-col gap-2 justify-center items-center bg-[#111827] text-white p-4 rounded-xl">
-                  <div className="flex flex-col gap-1 ">
+                  <div className="flex flex-col gap-1 w-[100%] ">
                     <label htmlFor="" className="text-base max-[400px]:text-sm min-[1600px]:text-lg">userName</label>
-                    <input type="text" className="rounded-md text-black  pl-2 pr-2 text-xs "  placeholder='Enter your name' name='userName' value={loginData.userName} required onChange={handleChange}/>
+                    <input type="text" className="rounded-md text-black  p-1 text-xs  "  placeholder='Enter your name' name='userName' value={loginData.userName} required onChange={handleChange}/>
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 w-[100%]">
                     <label htmlFor="" className="text-base max-[400px]:text-sm min-[1600px]:text-lg">Password</label>
-                    <input type="password" className="rounded-md  text-black  pl-2 pr-2 text-xs "  placeholder='Enter a password' name='password' value={loginData.password} required onChange={handleChange}/>
+                    <input type="password" className="rounded-md  text-black p-1   text-xs "  placeholder='Enter a password' name='password' value={loginData.password} required onChange={handleChange}/>
                     <button className='text-white text-right text-[12px] ml-18 max-[400px]:text-xs max-[800px]:text-sm  min-[1600px]:text-sm' onClick={()=> setForgotPass(true)}>forget password?</button>
                   </div>
 
