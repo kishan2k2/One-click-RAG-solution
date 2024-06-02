@@ -36,6 +36,12 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 APPEND_SLASH = False
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
 # Application definition
 
 INSTALLED_APPS = [
