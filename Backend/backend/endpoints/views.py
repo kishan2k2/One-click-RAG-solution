@@ -25,7 +25,7 @@ load_dotenv()
 def home(request):
     return render(request, 'index.html')
 @require_http_methods(['POST'])
-@csrf_exempt
+# @csrf_exempt
 def register(request):
     response = {}
     userName = request.POST.get('userName')
@@ -56,7 +56,7 @@ def register(request):
     }
     return JsonResponse(response, status=200)    
 @require_http_methods(['POST'])  
-@csrf_exempt                                                                         
+# @csrf_exempt                                                                         
 def login(request):
     response = {}
     userName = request.POST.get('userName')
@@ -79,7 +79,7 @@ def login(request):
     }
     return JsonResponse(response, status=200)
 @require_http_methods(['POST'])     
-@csrf_exempt   
+# @csrf_exempt   
 def forgotPass(request):
     response = {}
     userName = request.POST.get('userName')
@@ -112,7 +112,7 @@ def sendEmail(email, OTP):
     server.login('commonmailkishanandamar@gmail.com', password)
     server.sendmail('commonmailkishanandamar@gmail.com', email, message)
 @require_http_methods(['POST'])
-@csrf_exempt
+# @csrf_exempt
 def confirm(request):
     response = {}
     comp = request.POST.get('OTP')
@@ -129,7 +129,7 @@ def confirm(request):
         }
         return JsonResponse(response, status=204)
 @require_http_methods(['POST'])
-@csrf_exempt
+# @csrf_exempt
 def resetPass(request):
     response = {}
     password1 = request.POST.get('password1')
@@ -148,7 +148,7 @@ def resetPass(request):
     }
     return JsonResponse(response, status=200)
 @require_http_methods(['POST'])
-@csrf_exempt
+# @csrf_exempt
 @login_required
 def pdfInput_VectorDB(request):
     response = {}
@@ -223,7 +223,7 @@ def pdfInput_VectorDB(request):
             'response': 'No PDF uploaded'
         }
         return JsonResponse(response, status=204)
-@csrf_exempt
+# @csrf_exempt
 @login_required
 def askLLM(request, APIkey):
     response = {}
